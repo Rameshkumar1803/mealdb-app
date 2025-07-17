@@ -1,23 +1,32 @@
+// src/components/MealCard.jsx
 import React from 'react';
 
 const MealCard = ({ meal, onClick, isFavorite, toggleFavorite }) => {
+  const fav = isFavorite(meal);
+
   return (
-    <div className="border p-4 rounded hover:shadow-md relative">
+    <div className="relative border rounded shadow hover:shadow-lg cursor-pointer overflow-hidden">
       <img
         src={meal.strMealThumb}
         alt={meal.strMeal}
-        className="w-full h-48 object-cover rounded mb-2 cursor-pointer"
+        className="w-full h-48 object-cover"
         onClick={() => onClick(meal)}
       />
-      <h3 className="text-lg font-semibold">{meal.strMeal}</h3>
-      <p className="text-sm text-gray-500">{meal.strArea}</p>
+
       <button
-        onClick={() => toggleFavorite(meal)}
-        className="absolute top-2 right-2 text-xl"
-        title={isFavorite(meal) ? 'Remove from favorites' : 'Add to favorites'}
+        className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow-md transition-transform transform hover:scale-110"
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleFavorite(meal);
+        }}
       >
-        {isFavorite(meal) ? '♥' : '♡'}
+        <span className="text-xl">{fav ? "💖" : "🤍"}</span>
       </button>
+
+      <div className="p-2 text-center">
+        <h3 className="font-semibold">{meal.strMeal}</h3>
+        <p className="text-sm text-gray-500">{meal.strArea}</p>
+      </div>
     </div>
   );
 };

@@ -1,37 +1,17 @@
+// src/components/MealDetail.jsx
 import React from 'react';
 
-const MealCard = ({ meal, onClick, isFavorite, toggleFavorite }) => {
+const MealDetail = ({ meal, onClose }) => {
   return (
-    <div className="relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
-      {/* ⭐ Favorite Button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleFavorite(meal);
-        }}
-        className="absolute top-2 right-2 z-10 bg-white bg-opacity-90 rounded-full p-1 shadow hover:bg-yellow-200 transition"
-        title="Toggle Favorite"
-      >
-        {isFavorite(meal) ? '⭐' : '☆'}
-      </button>
-
-      {/* Meal Image */}
-      <img
-        src={meal.strMealThumb}
-        alt={meal.strMeal}
-        className="w-full h-48 object-cover cursor-pointer"
-        onClick={() => onClick(meal)}
-      />
-
-      {/* Meal Name */}
-      <div
-        className="p-3 cursor-pointer"
-        onClick={() => onClick(meal)}
-      >
-        <h3 className="text-lg font-semibold text-gray-800">{meal.strMeal}</h3>
-      </div>
+    <div className="bg-white shadow-md p-4 rounded">
+      <button onClick={onClose} className="mb-4 text-blue-600 underline">🔙 Back</button>
+      <h2 className="text-2xl font-bold mb-2">{meal.strMeal}</h2>
+      <img src={meal.strMealThumb} alt={meal.strMeal} className="w-full rounded mb-4" />
+      <p><strong>Category:</strong> {meal.strCategory}</p>
+      <p><strong>Area:</strong> {meal.strArea}</p>
+      <p className="mt-2">{meal.strInstructions}</p>
     </div>
   );
 };
 
-export default MealCard;
+export default MealDetail;
