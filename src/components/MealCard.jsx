@@ -2,30 +2,31 @@
 import React from 'react';
 
 const MealCard = ({ meal, onClick, isFavorite, toggleFavorite }) => {
-  const fav = isFavorite(meal);
-
   return (
-    <div className="relative border rounded shadow hover:shadow-lg cursor-pointer overflow-hidden">
+    <div
+      className="relative border rounded overflow-hidden shadow-md hover:shadow-xl transition cursor-pointer"
+    >
       <img
         src={meal.strMealThumb}
         alt={meal.strMeal}
-        className="w-full h-48 object-cover"
         onClick={() => onClick(meal)}
+        className="w-full h-48 object-cover"
       />
 
+      {/* Favorite Button */}
       <button
-        className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow-md transition-transform transform hover:scale-110"
         onClick={(e) => {
-          e.stopPropagation();
+          e.stopPropagation(); // prevent triggering onClick of parent
           toggleFavorite(meal);
         }}
+        className="absolute top-2 right-2 text-xl"
       >
-        <span className="text-xl">{fav ? "💖" : "🤍"}</span>
+        {isFavorite(meal) ? '❤️' : '🤍'}
       </button>
 
-      <div className="p-2 text-center">
-        <h3 className="font-semibold">{meal.strMeal}</h3>
-        <p className="text-sm text-gray-500">{meal.strArea}</p>
+      <div onClick={() => onClick(meal)} className="p-4">
+        <h3 className="text-lg font-semibold mb-1">{meal.strMeal}</h3>
+        <p className="text-sm text-gray-500">{meal.strCategory}</p>
       </div>
     </div>
   );

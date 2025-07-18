@@ -1,13 +1,12 @@
-// src/pages/Home.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import MealCard from '../components/MealCard';
 import MealDetail from '../components/MealDetail';
-import { toast } from 'react-toastify';
 
 const Home = () => {
   const [search, setSearch] = useState("chicken");
   const [meals, setMeals] = useState([]);
   const [selectedMeal, setSelectedMeal] = useState(null);
+
   const [favorites, setFavorites] = useState(() => {
     const saved = localStorage.getItem('favorites');
     return saved ? JSON.parse(saved) : [];
@@ -23,10 +22,8 @@ const Home = () => {
     if (exists) {
       const updated = favorites.filter((fav) => fav.idMeal !== meal.idMeal);
       saveFavorites(updated);
-      toast.info("Removed from favorites");
     } else {
       saveFavorites([...favorites, meal]);
-      toast.success("Added to favorites");
     }
   };
 
@@ -34,15 +31,21 @@ const Home = () => {
     return favorites.some((fav) => fav.idMeal === meal.idMeal);
   };
 
-  const fetchMeals = async () => {
-    const res = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${search}`);
-    const data = await res.json();
-    setMeals(data.meals || []);
-  };
+  const fetchMeals = useCallback(async () => {
+    const query = search.trim() || "chicken"; // fallback to 'chicken' if empty
+    try {
+      const res = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${query}`);
+      const data = await res.json();
+      setMeals(data.meals || []);
+    } catch (error) {
+      console.error("Error fetching meals:", error);
+      setMeals([]);
+    }
+  }, [search]);
 
   useEffect(() => {
     fetchMeals();
-  }, []);
+  }, [fetchMeals]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -50,7 +53,7 @@ const Home = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4 text-center">🍽️ MealDB Explorer</h1>
       {selectedMeal ? (
         <MealDetail meal={selectedMeal} onClose={() => setSelectedMeal(null)} />
@@ -67,7 +70,9 @@ const Home = () => {
           </form>
 
           <div className="flex justify-between items-center mb-4">
-            <a href="/favorites" className="text-blue-600 underline">⭐ View Favorites</a>
+            <a href="/favorites" className="text-blue-600 underline">
+              ⭐ View Favorites
+            </a>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

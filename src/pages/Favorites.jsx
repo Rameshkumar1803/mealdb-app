@@ -1,16 +1,15 @@
 // src/pages/Favorites.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MealCard from '../components/MealCard';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import MealDetail from '../components/MealDetail';
 
 const Favorites = () => {
   const [favorites, setFavorites] = useState([]);
-  const navigate = useNavigate();
+  const [selectedMeal, setSelectedMeal] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('favorites');
-    if (saved) setFavorites(JSON.parse(saved));
+    setFavorites(saved ? JSON.parse(saved) : []);
   }, []);
 
   const saveFavorites = (items) => {
@@ -21,37 +20,42 @@ const Favorites = () => {
   const toggleFavorite = (meal) => {
     const updated = favorites.filter((fav) => fav.idMeal !== meal.idMeal);
     saveFavorites(updated);
-    toast.info("Removed from favorites");
   };
 
-  const isFavorite = () => true;
+  const isFavorite = (meal) => {
+    return favorites.some((fav) => fav.idMeal === meal.idMeal);
+  };
 
   return (
-    <div className="max-w-5xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4 text-center">⭐ Favorite Meals</h1>
-      <div className="flex justify-start mb-4">
-        <button
-          className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
-          onClick={() => navigate("/")}
-        >
-          🔙 Back to Home
-        </button>
-      </div>
 
-      {favorites.length === 0 ? (
-        <p className="text-center text-gray-500">No favorites yet.</p>
+      {selectedMeal ? (
+        <MealDetail meal={selectedMeal} onClose={() => setSelectedMeal(null)} />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {favorites.map((meal) => (
-            <MealCard
-              key={meal.idMeal}
-              meal={meal}
-              onClick={() => {}}
-              isFavorite={isFavorite}
-              toggleFavorite={toggleFavorite}
-            />
-          ))}
-        </div>
+        <>
+          <div className="mb-4 text-center">
+            <a href="/" className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+              🔙 Go Back to Home
+            </a>
+          </div>
+
+          {favorites.length === 0 ? (
+            <p className="text-center text-gray-500 mt-10">No favorite meals yet. Try adding some!</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {favorites.map((meal) => (
+                <MealCard
+                  key={meal.idMeal}
+                  meal={meal}
+                  onClick={setSelectedMeal}
+                  isFavorite={isFavorite}
+                  toggleFavorite={toggleFavorite}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
