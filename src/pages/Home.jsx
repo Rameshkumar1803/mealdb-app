@@ -1,29 +1,34 @@
-// src/pages/Home.jsx
-import React, { useState, useEffect } from 'react';
-import MealCard from '../components/MealCard';
-import MealDetail from '../components/MealDetail';
+import React, { useState, useEffect } from "react";
+import MealCard from "../components/MealCard";
+import MealDetail from "../components/MealDetail";
 
 const Home = () => {
   const [search, setSearch] = useState("chicken");
   const [meals, setMeals] = useState([]);
   const [selectedMeal, setSelectedMeal] = useState(null);
   const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('favorites');
+    const saved = localStorage.getItem("favorites");
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedArea, setSelectedArea] = useState("");
   const [categories, setCategories] = useState([]);
   const [areas, setAreas] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedArea, setSelectedArea] = useState('');
 
-  // 👉 Pagination state
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Pagination
+  const itemsPerPage = 6;
   const [currentPage, setCurrentPage] = useState(1);
-  const mealsPerPage = 6;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentMeals = meals.slice(indexOfFirstItem, indexOfLastItem);
 
+  // Save favorites
   const saveFavorites = (items) => {
     setFavorites(items);
-    localStorage.setItem('favorites', JSON.stringify(items));
+    localStorage.setItem("favorites", JSON.stringify(items));
   };
 
   const toggleFavorite = (meal) => {
@@ -41,6 +46,7 @@ const Home = () => {
   };
 
   const fetchMeals = async () => {
+    setIsLoading(true);
     let url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${search}`;
 
     if (selectedCategory) {
@@ -52,14 +58,17 @@ const Home = () => {
     const res = await fetch(url);
     const data = await res.json();
     setMeals(data.meals || []);
-    setCurrentPage(1); // reset to first page on new search/filter
+    setCurrentPage(1);
+    setIsLoading(false);
   };
 
   const fetchFilters = async () => {
-    const [catRes, areaRes] = await Promise.all([
-      fetch("https://www.themealdb.com/api/json/v1/1/list.php?c=list"),
-      fetch("https://www.themealdb.com/api/json/v1/1/list.php?a=list")
-    ]);
+    const catRes = await fetch(
+      "https://www.themealdb.com/api/json/v1/1/list.php?c=list"
+    );
+    const areaRes = await fetch(
+      "https://www.themealdb.com/api/json/v1/1/list.php?a=list"
+    );
     const catData = await catRes.json();
     const areaData = await areaRes.json();
     setCategories(catData.meals || []);
@@ -67,58 +76,44 @@ const Home = () => {
   };
 
   useEffect(() => {
-    fetchMeals();
     fetchFilters();
-    // eslint-disable-next-line
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
+  useEffect(() => {
     fetchMeals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, selectedCategory, selectedArea]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
-  // 👉 Calculate paginated meals
-  const indexOfLastMeal = currentPage * mealsPerPage;
-  const indexOfFirstMeal = indexOfLastMeal - mealsPerPage;
-  const currentMeals = meals.slice(indexOfFirstMeal, indexOfLastMeal);
-  const totalPages = Math.ceil(meals.length / mealsPerPage);
+  const handleSearchInput = (e) => {
+    setSearch(e.target.value);
+  };
 
   return (
-    <div className="max-w-5xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4 text-center">🍽️ MealDB Explorer</h1>
+    <div className="max-w-6xl mx-auto p-4">
+      <h1 className="text-4xl font-bold mb-6 text-center">🍽️ MealDB Explorer</h1>
 
       {selectedMeal ? (
         <MealDetail meal={selectedMeal} onClose={() => setSelectedMeal(null)} />
       ) : (
         <>
-          {/* Search Input */}
-          <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+          <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 border p-2 rounded"
+              onChange={handleSearchInput}
+              className="flex-1 border p-2 rounded w-full md:w-auto"
               placeholder="Search for meals..."
-              disabled={selectedCategory || selectedArea}
             />
-            <button
-              className="bg-blue-500 text-white px-4 rounded"
-              disabled={selectedCategory || selectedArea}
-            >
-              Search
-            </button>
-          </form>
-
-          {/* Category & Area Filters */}
-          <div className="flex flex-wrap gap-4 mb-4 justify-center">
             <select
-              className="border p-2 rounded"
               value={selectedCategory}
               onChange={(e) => {
                 setSelectedCategory(e.target.value);
-                setSelectedArea('');
-                setSearch('');
-                fetchMeals();
+                setSelectedArea("");
               }}
+              className="border p-2 rounded"
             >
               <option value="">All Categories</option>
               {categories.map((cat) => (
@@ -127,16 +122,13 @@ const Home = () => {
                 </option>
               ))}
             </select>
-
             <select
-              className="border p-2 rounded"
               value={selectedArea}
               onChange={(e) => {
                 setSelectedArea(e.target.value);
-                setSelectedCategory('');
-                setSearch('');
-                fetchMeals();
+                setSelectedCategory("");
               }}
+              className="border p-2 rounded"
             >
               <option value="">All Areas</option>
               {areas.map((area) => (
@@ -145,65 +137,52 @@ const Home = () => {
                 </option>
               ))}
             </select>
-
-            {(selectedCategory || selectedArea) && (
-              <button
-                className="text-red-500 underline"
-                onClick={() => {
-                  setSelectedCategory('');
-                  setSelectedArea('');
-                  fetchMeals();
-                }}
-              >
-                ❌ Clear Filter
-              </button>
-            )}
-          </div>
-
-          {/* Go to Favorites Page */}
-          <div className="flex justify-between items-center mb-4">
             <a href="/favorites" className="text-blue-600 underline">
               ⭐ View Favorites
             </a>
           </div>
 
-          {/* Meals List */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {currentMeals.map((meal) => (
-              <MealCard
-                key={meal.idMeal}
-                meal={meal}
-                onClick={setSelectedMeal}
-                isFavorite={isFavorite}
-                toggleFavorite={toggleFavorite}
-              />
-            ))}
-          </div>
-
-          {/* No Results */}
-          {meals.length === 0 && (
-            <p className="text-center text-gray-500 mt-4">No meals found.</p>
-          )}
-
-          {/* Pagination Controls */}
-          {meals.length > mealsPerPage && (
-            <div className="flex justify-center items-center gap-4 mt-6">
-              <button
-                className="px-4 py-1 bg-gray-200 rounded disabled:opacity-50"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(currentPage - 1)}
-              >
-                ⬅️ Prev
-              </button>
-              <span>Page {currentPage} of {totalPages}</span>
-              <button
-                className="px-4 py-1 bg-gray-200 rounded disabled:opacity-50"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
-              >
-                Next ➡️
-              </button>
+          {/* Loading Spinner */}
+          {isLoading ? (
+            <div className="text-center py-10">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p className="mt-2 text-blue-600 font-medium">Loading meals...</p>
             </div>
+          ) : meals.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {currentMeals.map((meal) => (
+                  <MealCard
+                    key={meal.idMeal}
+                    meal={meal}
+                    onClick={setSelectedMeal}
+                    isFavorite={isFavorite}
+                    toggleFavorite={toggleFavorite}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <div className="flex justify-center mt-6 space-x-2">
+                {Array.from({
+                  length: Math.ceil(meals.length / itemsPerPage),
+                }).map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handlePageChange(idx + 1)}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === idx + 1
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200"
+                    }`}
+                  >
+                    {idx + 1}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-center text-gray-500 mt-8">No meals found.</p>
           )}
         </>
       )}
