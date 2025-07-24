@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import MealCard from "../components/MealCard";
 import MealDetail from "../components/MealDetail";
+import DarkModeToggle from "../components/DarkModeToggle";
 
 const Home = () => {
   const [search, setSearch] = useState("chicken");
@@ -137,9 +138,10 @@ const Home = () => {
                 </option>
               ))}
             </select>
-            <a href="/favorites" className="text-blue-600 underline">
-              ⭐ View Favorites
+            <a href="/favorites" className="text-blue-600 underline dark:text-yellow-400">
+              ⭐ View Favorites Food
             </a>
+              <DarkModeToggle />
           </div>
 
           {/* Loading Spinner */}
@@ -161,7 +163,6 @@ const Home = () => {
                   />
                 ))}
               </div>
-
               {/* Pagination */}
               <div className="flex justify-center mt-6 space-x-2">
                 {Array.from({
